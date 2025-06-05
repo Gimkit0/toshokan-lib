@@ -281,10 +281,12 @@ function Modules.States()
 	end
 
 	function States:_addConn(name, connection)
-		if self.Connections[name] then
-			self.Connections[name]:Disconnect()
-		end
-		self.Connections[name] = connection
+		task.spawn(pcall, function()
+			if self.Connections[name] then
+				self.Connections[name]:Disconnect()
+			end
+			self.Connections[name] = connection
+		end)
 	end
 	function States:_removeConn(name)
 		if self.Connections[name] then
@@ -465,11 +467,13 @@ function Modules.SmoothScroll()
 		end
 
 		local SmoothConnection = RunService.RenderStepped:Connect(function()
-			local Canvas = ScrollFrame.CanvasPosition
-			local FakeCanvas = Emulator.CanvasPosition
-			local Math = (FakeCanvas - Canvas) * Factor + Canvas
+			task.spawn(pcall, function()
+				local Canvas = ScrollFrame.CanvasPosition
+				local FakeCanvas = Emulator.CanvasPosition
+				local Math = (FakeCanvas - Canvas) * Factor + Canvas
 
-			ScrollFrame.CanvasPosition = Math
+				ScrollFrame.CanvasPosition = Math
+			end)
 		end)
 
 		local SizeConnection = ScrollFrame:GetPropertyChangedSignal("AbsoluteCanvasSize"):Connect(function()
