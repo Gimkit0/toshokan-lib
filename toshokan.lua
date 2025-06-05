@@ -577,8 +577,8 @@ function Library:Window(config)
 	G2L["2f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
 	G2L["2f"]["BackgroundTransparency"] = 1
 	
-	--G2L["2g"] = Instance.new("UIDragDetector", G2L["2"])
-	--G2L["2g"]["Name"] = "Drag"
+	G2L["2g"] = Instance.new("UIDragDetector", G2L["2"])
+	G2L["2g"]["Name"] = "Drag"
 	
 	local gui = G2L["1"]
 	local main = G2L["2"]
