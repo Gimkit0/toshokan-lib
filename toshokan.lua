@@ -7,7 +7,7 @@ function Library.new()
 	local modules
 	if game:GetService("RunService"):IsStudio() then
 		modules = require(script.Modules) else
-		modules = nil
+		modules = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gimkit0/toshokan-lib/refs/heads/main/modules.lua"))()
 	end
 	
 	self.Services = {
