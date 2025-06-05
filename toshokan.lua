@@ -61,12 +61,14 @@ function Library.new()
 		return config
 	end
 	self.addConn = function(name, conn, recursive : boolean?)
-		if recursive then
-			if (self.Storage.Connections[name]) then
-				self.Storage.Connections[name]:Disconnect()
+		self.spawn(function()
+			if recursive then
+				if (self.Storage.Connections[name]) then
+					self.Storage.Connections[name]:Disconnect()
+				end
 			end
-		end
-		self.Storage.Connections[name] = conn
+			self.Storage.Connections[name] = conn
+		end)
 	end
 	self.removeConn = function(name)
 		if (self.Storage.Connections[name]) then
