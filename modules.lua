@@ -1067,14 +1067,14 @@ function Modules.Blur()
 	end
 
 	function BlurredGui.updateAll()
+		task.spawn(pcall, function()
+			for i = 1, #BlursList do
+				updateGui(BlursList[i])
+			end
 
-		for i = 1, #BlursList do
-			updateGui(BlursList[i])
-		end
-
-		local cframes = table.create(#BlursList, workspace.CurrentCamera.CFrame)
-		workspace:BulkMoveTo(PartsList, cframes, Enum.BulkMoveMode.FireCFrameChanged)
-
+			local cframes = table.create(#BlursList, workspace.CurrentCamera.CFrame)
+			workspace:BulkMoveTo(PartsList, cframes, Enum.BulkMoveMode.FireCFrameChanged)
+		end)
 		--BLUR_OBJ.FocusDistance = 0.25 - camera.NearPlaneZ
 	end
 
