@@ -590,6 +590,8 @@ function Library:Window(config)
 	local container = main.Container
 	local background = main.Background
 	local interactive = main.Interactive
+	
+	local dragDetector = main.Drag
 
 	local title = header.Prop.Title
 
@@ -633,14 +635,19 @@ function Library:Window(config)
 	})
 	snapDragonController:SetEnabled(false)
 	
-	if self.Services.GuiService.MenuIsOpen then
-		snapDragonController:SetEnabled(false) else snapDragonController:SetEnabled(true)
-	end
-	self.addConn("ROBLOX_MENU", game.GuiService:GetPropertyChangedSignal("MenuIsOpen"):Connect(function()
+	local function switchDrag()
 		if self.Services.GuiService.MenuIsOpen then
-			print("E")
-			snapDragonController:SetEnabled(false) else snapDragonController:SetEnabled(true)
+			snapDragonController:SetEnabled(true)
+			dragDetector.Enabled = false
+		else
+			snapDragonController:SetEnabled(false)
+			dragDetector.Enabled = true
 		end
+	end
+	
+	switchDrag()
+	self.addConn("ROBLOX_MENU", self.Services.GuiService:GetPropertyChangedSignal("MenuIsOpen"):Connect(function()
+		switchDrag()
 	end))
 
 	self.addConn("SEARCH_FOCUSED", menu.Top.Search.Focused:Connect(function()
