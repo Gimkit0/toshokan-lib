@@ -3,18 +3,19 @@ Library.__index = Library
 
 function Library.new()
 	local self = setmetatable({}, Library)
-	
+
 	local modules
 	if game:GetService("RunService"):IsStudio() then
 		modules = require(script.Modules) else
 		modules = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gimkit0/toshokan-lib/refs/heads/main/modules.lua"))()
 	end
-	
+
 	self.Services = {
 		TweenService = game:GetService("TweenService"),
 		RunService = game:GetService("RunService"),
 		UserInputService = game:GetService("UserInputService"),
 		Players = game:GetService("Players"),
+		GuiService = game:GetService("GuiService"),
 	}
 	self.Modules = {
 		Blur = modules.Blur(),
@@ -26,14 +27,15 @@ function Library.new()
 		SmoothScroll = modules.SmoothScroll(),
 		Ripple = modules.Ripple(),
 		SearchModule = modules.SearchModule(),
+		SnapDragon = modules.Snapdragon(),
 	}
 	self.Storage = {
 		Connections = {},
 		ThemeConns = {},
-		
+
 		CurrentTheme = nil,
 	}
-	
+
 	self.tween = function(obj, info, goal)
 		local tween = self.Services.TweenService:Create(obj, info, goal)
 		tween:Play()
@@ -52,7 +54,7 @@ function Library.new()
 		if not config then
 			config = {}
 		end
-		
+
 		for k, v in pairs(defaults) do
 			if (config[k] == nil) then
 				config[k] = v
@@ -78,7 +80,7 @@ function Library.new()
 	end
 	self.selectTheme = function(themes, name)
 		name = name:lower()
-		
+
 		for index, value in pairs(themes) do
 			if (name == index:lower()) then
 				self.spawn(function()
@@ -100,18 +102,18 @@ function Library.new()
 			conn(self.Storage.CurrentTheme)
 		end
 	end
-	
+
 	return self
 end
 
 function Library:Window(config)
 	local winTable = {}
 	local G2L = {}
-	
+
 	config = self.validateConfig({
 		TITLE = "Window",
 		ICON = 0,
-		
+
 		DEFAULT_THEME = "Dark",
 		THEMES = {
 			["DARK"] = {
@@ -147,19 +149,19 @@ function Library:Window(config)
 				HEADER_SHADOW_TRANSPARENCY = .7,
 				HEADER_SHAODW_BOTTOM_TRANSPARENCY = .1,
 				HEADER_TRANSPARENCY = .5,
-				
+
 				ACRYLIC = true,
 			}
 		},
-		
+
 		ON_DESTROY = function() end,
 	}, config)
 	winTable.Config = config
-	
+
 	local theme = self.selectTheme(config.THEMES, config.DEFAULT_THEME)
-	
+
 	local menuOpened = false
-	
+
 	local windowParent
 	if self.Services.RunService:IsStudio() then
 		windowParent = self.Services.Players.LocalPlayer:WaitForChild("PlayerGui") else
@@ -555,7 +557,7 @@ function Library:Window(config)
 	G2L["2d"]["PaddingRight"] = UDim.new(0, 15)
 	G2L["2d"]["PaddingBottom"] = UDim.new(0, 15)
 	G2L["2d"]["PaddingLeft"] = UDim.new(0, 15)
-	
+
 	G2L["2g"] = Instance.new("UIStroke", G2L["2b"]);
 	G2L["2g"]["Color"] = Color3.fromRGB(51, 51, 51);
 	G2L["2g"]["Name"] = [[Outline]];
@@ -576,10 +578,10 @@ function Library:Window(config)
 	G2L["2f"]["Name"] = [[Overlay]]
 	G2L["2f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
 	G2L["2f"]["BackgroundTransparency"] = 1
-	
+
 	G2L["2g"] = Instance.new("UIDragDetector", G2L["2"])
 	G2L["2g"]["Name"] = "Drag"
-	
+
 	local gui = G2L["1"]
 	local main = G2L["2"]
 	local header = main.Header
@@ -588,9 +590,9 @@ function Library:Window(config)
 	local container = main.Container
 	local background = main.Background
 	local interactive = main.Interactive
-	
+
 	local title = header.Prop.Title
-	
+
 	local responsive = self.Modules.Resuponshibu.new()
 	local textAnim = self.Modules.TextAnimation.new()
 	local fade = self.Modules.Fade
@@ -616,16 +618,31 @@ function Library:Window(config)
 			background.Visible = true
 		end,
 	})
-	
+
 	local blur = nil
 	local selectedPage = nil
-	
+
 	local loading = true
-	
+
 	responsive:Set(gui, 1600, true)
 	smoothScroll(menu.Buttons, .05)
 	searchModule(menu.Top.Search, menu.Buttons)
 	
+	local snapDragonController = self.Modules.SnapDragon.createDragController(menu, {
+		SnapEnabled = false,
+	})
+	snapDragonController:SetEnabled(false)
+	
+	if self.Services.GuiService.MenuIsOpen then
+		snapDragonController:SetEnabled(false) else snapDragonController:SetEnabled(true)
+	end
+	self.addConn("ROBLOX_MENU", game.GuiService:GetPropertyChangedSignal("MenuIsOpen"):Connect(function()
+		if self.Services.GuiService.MenuIsOpen then
+			print("E")
+			snapDragonController:SetEnabled(false) else snapDragonController:SetEnabled(true)
+		end
+	end))
+
 	self.addConn("SEARCH_FOCUSED", menu.Top.Search.Focused:Connect(function()
 		self.tween(menu.Top.Search, TweenInfo.new(.5), {BackgroundTransparency = 0})
 		self.tween(menu.Top.Search.Outline, TweenInfo.new(.5), {Transparency = 0})
@@ -640,9 +657,9 @@ function Library:Window(config)
 			self.tween(menu.Top.Search.Outline, TweenInfo.new(.5), {Transparency = 1})
 		end
 	end))
-	
-	
-	
+
+
+
 	self.addConn("HEADER_HOVER", header.MouseEnter:Connect(function()
 		self.tween(interactive.HeaderShadow, TweenInfo.new(.5), {ImageTransparency = .7})
 		self.tween(header.Background, TweenInfo.new(.5), {BackgroundTransparency = 0})
@@ -659,21 +676,21 @@ function Library:Window(config)
 		self.tween(header.IncompleteUnderline, TweenInfo.new(.5), {BackgroundTransparency = 0})
 		self.tween(header.CompleteUnderline, TweenInfo.new(2), {BackgroundTransparency = 1})
 	end))
-	
+
 	winTable.Instances = G2L
-	
+
 	winTable.circleButton = function(config)
 		local circleTable = {}
 		local G2L = {}
-		
+
 		config = self.validateConfig({
 			NAME = "Circle Button",
 			ICON = 0,
-			
+
 			PARENT = winTable.Instances["1"],
-			
+
 			SIZE = UDim2.new(0, 20, 0, 20),
-			
+
 			CALLBACK = function()
 				print("Clicked")
 			end,
@@ -721,16 +738,16 @@ function Library:Window(config)
 
 		G2L["6"] = Instance.new("UIScale", G2L["2"])
 		G2L["6"]["Name"] = [[ClickScale]]
-		
+
 		local button = G2L["2"]
 		local icon = button.Icon
 		local ripple = button.Ripple
 		local clickScale = button.ClickScale
-		
+
 		circleTable.Instances = G2L
-		
+
 		button.Parent = config.PARENT
-		
+
 		self.addConn("CIRCLE_BUTTON_HOVER", button.MouseEnter:Connect(function()
 			self.tween(ripple.Scale, TweenInfo.new(0.25), {Scale = 1})
 			self.tween(ripple, TweenInfo.new(0.5), {ImageTransparency = theme.RIPPLE_TRANSPARENCY})
@@ -766,35 +783,35 @@ function Library:Window(config)
 				self.tween(ripple, TweenInfo.new(0.1), {ImageTransparency = theme.RIPPLE_TRANSPARENCY})
 			end
 		end))
-		
+
 		circleTable.changeIcon = function(iconId)
 			icon.Image = `rbxassetid://{iconId}`
 		end
 		circleTable.changeName = function(name)
 			button.Name = name
 		end
-		
+
 		circleTable.changeIcon(config.ICON)
 		circleTable.changeName(config.NAME)
-		
+
 		button.Size = config.SIZE
 		self.onSwitchTheme(function(theme)
 			icon.ImageColor3 = theme.SHADED_TEXT
 			ripple.ImageColor3 = theme.RIPPLE_COLOR
 		end)
-		
+
 		return circleTable
 	end
 	winTable.pageButton = function(config)
 		local buttonTable = {}
 		local G2L = {}
-		
+
 		config = self.validateConfig({
 			NAME = "Page Button",
 			DESCRIPTION = "This is a description",
 			ICON = 0,
 		}, config)
-		
+
 		G2L["2"] = Instance.new("ImageButton", G2L["1"]);
 		G2L["2"]["ZIndex"] = 26;
 		G2L["2"]["BorderSizePixel"] = 0;
@@ -911,14 +928,14 @@ function Library:Window(config)
 		G2L["c"] = Instance.new("UIScale", G2L["2"]);
 		G2L["c"]["Scale"] = 0.949999988079071;
 		G2L["c"]["Name"] = [[Scale]];
-		
+
 		local button = G2L["2"]
 		local container = button.Container
 		local underline = button.Underline
 		local icon = container.Icon
 		local title = container.Title
 		local description = container.Desc
-		
+
 		buttonTable.changeName = function(name, iconId, desc)
 			if name then
 				button.Name = name
@@ -932,7 +949,7 @@ function Library:Window(config)
 			end
 		end
 		buttonTable.Instance = button
-		
+
 		buttonTable.changeName(config.NAME, config.ICON, config.DESCRIPTION)
 		self.onSwitchTheme(function(theme)
 			title.TextColor3 = theme.REGULAR_TEXT
@@ -941,20 +958,20 @@ function Library:Window(config)
 			button.BackgroundColor3 = theme.THEME_COLOR
 			underline.BackgroundColor3 = theme.UNDERLINE
 		end)
-		
+
 		return buttonTable
 	end
 	winTable.changeName = function(name)
 		if not name then
 			name = ""
 		end
-		
+
 		name = tostring(name)
-		
+
 		title.Text = name
 		gui.Name = math.random(1, 99999999)
 		main.Name = math.random(1, 99999999)
-		
+
 		textAnim:PopText(title, TweenInfo.new(.5, Enum.EasingStyle.Elastic), -10, .05)
 	end
 	winTable.setWindowState = function(state)
@@ -1099,21 +1116,21 @@ function Library:Window(config)
 	end
 	winTable.theme = theme
 	winTable.lib = self
-	
+
 	function winTable:Page(config)
 		repeat task.wait() until not loading
-		
+
 		local pageTable = {}
 		local G2L = {}
-		
+
 		local self = winTable.lib
-		
+
 		config = self.validateConfig({
 			TITLE = "Page",
 			DESCRIPTION = "This is a description",
 			ICON = 0,
 		}, config)
-		
+
 		G2L["2"] = Instance.new("ScrollingFrame", container);
 		G2L["2"]["Active"] = true;
 		G2L["2"]["BorderSizePixel"] = 0;
@@ -1178,38 +1195,38 @@ function Library:Window(config)
 		G2L["7"]["ScrollBarImageTransparency"] = 0;
 		G2L["7"]["CanvasSize"] = UDim2.new(0,0,0,0);
 		G2L["7"]["AutomaticCanvasSize"] = Enum.AutomaticSize.Y
-		
+
 		G2L["8"] = Instance.new("UIListLayout", G2L["7"]);
 		G2L["8"]["Name"] = [[ListLayout]];
 		G2L["8"]["Padding"] = UDim.new(0, 10);
 		G2L["8"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
-		
+
 		G2L["9"] = Instance.new("UIPadding", G2L["7"]);
 		G2L["9"]["PaddingTop"] = UDim.new(0, 15);
 		G2L["9"]["Name"] = [[Padding]];
 		G2L["9"]["PaddingRight"] = UDim.new(0, 10);
 		G2L["9"]["PaddingBottom"] = UDim.new(0, 10);
 		G2L["9"]["PaddingLeft"] = UDim.new(0, 10);
-		
+
 		local frame = G2L["2"]
 		local content = frame.Content
 		local title = frame.Title
 		local icon = title.Icon
-		
+
 		smoothScroll(content)
-		
+
 		local buttonTable = winTable.pageButton({
 			NAME = config.TITLE,
 			DESCRIPTION = config.DESCRIPTION,
 			ICON = config.ICON,
 		})
 		local button = buttonTable.Instance
-		
+
 		button.Parent = menu.Buttons
-		
+
 		local tabModule = tabControl:AddTab(button, config.TITLE, function(session)
 			selectedPage = session
-			
+
 			winTable.closeMenu()
 			frame.Visible = true
 			self.tween(frame, TweenInfo.new(1.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0,0,0,0)})
@@ -1220,7 +1237,7 @@ function Library:Window(config)
 				frame.Visible = tab.active
 			end)
 		end)
-		
+
 		pageTable.changeName = function(name, iconId, desc)
 			if name then
 				title.Text = name
@@ -1232,22 +1249,22 @@ function Library:Window(config)
 			end
 			buttonTable.changeName(name, iconId, desc)
 		end
-		
+
 		function pageTable:Button(config)
 			local buttonTable = {}
 			local G2L = {}
-			
+
 			local self = winTable.lib
-			
+
 			config = self.validateConfig({
 				NAME = "Button",
 				DESCRIPTION = "This is a description",
-				
+
 				CALLBACK = function()
 					print("Clicked button!")
 				end,
 			}, config)
-			
+
 			G2L["2"] = Instance.new("ImageButton", G2L["1"]);
 			G2L["2"]["BorderSizePixel"] = 0;
 			G2L["2"]["AutoButtonColor"] = false;
@@ -1323,25 +1340,25 @@ function Library:Window(config)
 
 			G2L["b"] = Instance.new("UIScale", G2L["2"]);
 			G2L["b"]["Name"] = [[ClickScale]];
-			
+
 			local button = G2L["2"]
 			local outline = button.Outline
 			local icon = button.Icon
 			local description = button.Description
 			local title = button.Title
-			
+
 			local lastSize = button.Size
-			
+
 			local descOpened = false
-			
+
 			local descButton = winTable.circleButton({
 				NAME = "Description Activate",
 				ICON = 12809025337,
-				
+
 				SIZE = UDim2.new(0, 15, 0, 15),
-				
+
 				PARENT = button,
-				
+
 				CALLBACK = function()
 					if not descOpened then
 						descOpened = not descOpened
@@ -1356,7 +1373,7 @@ function Library:Window(config)
 			})
 			descButton.Instances["2"].Position = UDim2.new(1,0,0,-7)
 			descButton.Instances["2"].AnchorPoint = Vector2.new(1, 0)
-			
+
 			buttonTable.changeName = function(name, desc)
 				if name then
 					title.Text = name
@@ -1366,7 +1383,7 @@ function Library:Window(config)
 					description.Text = desc
 				end
 			end
-			
+
 			self.addConn("BUTTON_CLICK", button.Activated:Connect(function()
 				ripple:PopRipple(button, {
 					Color = theme.THEME_COLOR,
@@ -1389,7 +1406,7 @@ function Library:Window(config)
 			self.addConn("BUTTON_UNHOLDING", button.MouseButton1Up:Connect(function()
 				self.tween(outline, TweenInfo.new(.5), {Color = theme.OUTLINE})
 			end))
-			
+
 			self.onSwitchTheme(function(theme)
 				title.TextColor3 = theme.REGULAR_TEXT
 				description.TextColor3 = theme.SHADED_TEXT
@@ -1397,37 +1414,37 @@ function Library:Window(config)
 				icon.ImageColor3 = theme.THEME_COLOR
 				button.BackgroundColor3 = theme.BACKGROUND
 			end)
-			
+
 			button.Parent = content
 			buttonTable.changeName(config.NAME, config.DESCRIPTION)
 		end
-		
+
 		pageTable.changeName(config.TITLE, config.ICON)
-		
+
 		frame.Parent = container
 		frame.Position = UDim2.new(0,0,1,0)
-		
+
 		self.onSwitchTheme(function(theme)
 			title.TextColor3 = theme.REGULAR_TEXT
 			title.Underline.BackgroundColor3 = theme.THEME_COLOR
 			title.Icon.ImageColor3 = theme.THEME_COLOR
 			content.ScrollBarImageColor3 = theme.THEME_COLOR
 		end)
-		
+
 		return pageTable
 	end
-	
+
 	function winTable:Destroy()
 		config.ON_DESTROY(gui)
 		gui:Destroy()
 	end
-	
+
 	self.spawn(function()
 		header.Visible = false
 		background.Visible = false
 		container.Visible = false
 	end)
-	
+
 	self.spawn(function()
 		local menuButton = winTable.circleButton({NAME = "Menu", ICON = 2777728378, PARENT = header.Prop, CALLBACK = function()
 			winTable.toggleMenu()
@@ -1494,13 +1511,13 @@ function Library:Window(config)
 			task.wait(.5)
 			winTable:Destroy()
 		end,})
-		
+
 		winTable.addHoverLabel(menuButton.Instances["2"], "Menu", "Opens the menu to the other pages.")
 		winTable.addHoverLabel(closeButton.Instances["2"], "Close", "Closes the entire window. [Cannot open again]")
 		winTable.addHoverLabel(maximizeButton.Instances["2"], "Maximize", "Makes the window go in fullscreen.")
 		winTable.addHoverLabel(minimizeButton.Instances["2"], "Minimize", "Minimizes the winodw")
 	end)
-	
+
 	self.spawn(function()
 		for i = 1, 25 do
 			local temp = intro.Template:Clone()
@@ -1534,7 +1551,7 @@ function Library:Window(config)
 		end
 		task.wait(.5)
 		intro.Visible = false
-		
+
 		fade:FadeClose(main, 0)
 		background.Visible = true
 		task.wait(.1)
@@ -1545,7 +1562,7 @@ function Library:Window(config)
 		winTable.changeName(config.TITLE)
 		loading = false
 	end)
-	
+
 	self.onSwitchTheme(function(theme)
 		background.BackgroundColor3 = theme.BACKGROUND
 		background.DropShadow.ImageColor3 = theme.DROPSHADOW
@@ -1553,28 +1570,28 @@ function Library:Window(config)
 		background.Image.Image = `rbxassetid://{theme.BACKGROUND_IMAGE}`
 		background.Image.ImageTransparency = theme.BACKGROUND_IMAGE_TRANSPARENCY
 		background.Image.ImageColor3 = theme.BACKGROUND_IMAGE_COLOR
-		
+
 		header.Background.BackgroundColor3 = theme.BACKGROUND
 		header.Background.BackgroundTransparency = theme.HEADER_TRANSPARENCY
 		header.IncompleteUnderline.BackgroundColor3 = theme.THEME_COLOR
 		header.CompleteUnderline.BackgroundColor3 = theme.UNDERLINE
-		
+
 		menu.BackgroundColor3 = theme.BACKGROUND
 		menu.Top.Search.BackgroundColor3 = theme.LIGHT_BACKGROUND
 		menu.Top.Search.TextColor3 = theme.REGULAR_TEXT
 		menu.Top.Search.PlaceholderColor3 = theme.SHADED_TEXT
 		menu.Top.Search.Outline.Color = theme.THEME_COLOR
-		
+
 		interactive.HeaderShadow.ImageColor3 = theme.HEADER_SHADOW
 		interactive.HeaderShadow.Label.TextColor3 = theme.REGULAR_TEXT
 		interactive.HeaderShadow.Desc.TextColor3 = theme.SHADED_TEXT
 		interactive.HoverShadow.ImageColor3 = theme.HEADER_SHADOW
-		
+
 		title.TextColor3 = theme.SHADED_TEXT
-		
+
 		winTable.setAcrylic(theme.ACRYLIC)
 	end)
-	
+
 	return winTable
 end
 
