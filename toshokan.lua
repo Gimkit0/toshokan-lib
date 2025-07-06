@@ -35,6 +35,47 @@ function Library.new()
 
 		CurrentTheme = nil,
 	}
+	self.LibConfig = {
+		DEFAULT_THEME = "Dark",
+		THEMES = {
+			["DARK"] = {
+				THEME_COLOR = Color3.fromRGB(255, 178, 83),
+
+				BACKGROUND = Color3.fromRGB(25, 25, 25),
+				LIGHT_BACKGROUND = Color3.fromRGB(50, 50, 50),
+				BACKGROUND_TRANSPARENCY = .1,
+				BACKGROUND_IMAGE = 16255699706,
+				BACKGROUND_IMAGE_TRANSPARENCY = .2,
+				BACKGROUND_IMAGE_COLOR = Color3.fromRGB(255, 255, 255),
+				DROPSHADOW = Color3.fromRGB(20, 20, 20),
+				DROPSHADOW_TRANSPARENCY = .2,
+
+				REGULAR_TEXT = Color3.fromRGB(235, 235, 235),
+				SHADED_TEXT = Color3.fromRGB(150, 150, 150),
+				THEME_FILL_TEXT = Color3.fromRGB(0, 0, 0),
+
+				OUTLINE = Color3.fromRGB(50, 50, 50),
+				UNDERLINE = Color3.fromRGB(50, 50, 50),
+
+				SUGGESTION_TRANSPAENCY = .2,
+
+				REGULAR_BUTTON_TRANSPARENCY = 1,
+				REGULAR_BUTTON_HOVER_TRANSPARENCY = .9,
+				REGULAR_BUTTON_CLICK_TRANSPARENCY = .5,
+
+				RIPPLE_COLOR = Color3.fromRGB(255, 255, 255),
+				RIPPLE_TRANSPARENCY = .95,
+				RIPPLE_CLICK_TRANSPARENCY = .8,
+
+				HEADER_SHADOW = Color3.fromRGB(25, 25, 25),
+				HEADER_SHADOW_TRANSPARENCY = .7,
+				HEADER_SHAODW_BOTTOM_TRANSPARENCY = .1,
+				HEADER_TRANSPARENCY = .5,
+
+				ACRYLIC = true,
+			}
+		},
+	}
 
 	self.tween = function(obj, info, goal)
 		local tween = self.Services.TweenService:Create(obj, info, goal)
@@ -102,6 +143,14 @@ function Library.new()
 			conn(self.Storage.CurrentTheme)
 		end
 	end
+	self.switchConfig = function(config)
+		self.LibConfig = self.validateConfig(self.LibConfig, config)
+	end
+	self.propertiesApply = function(obj, propTable)
+		for prop, value in pairs(propTable) do
+			obj[prop] = value
+		end
+	end
 
 	return self
 end
@@ -114,51 +163,11 @@ function Library:Window(config)
 		TITLE = "Window",
 		ICON = 0,
 
-		DEFAULT_THEME = "Dark",
-		THEMES = {
-			["DARK"] = {
-				THEME_COLOR = Color3.fromRGB(255, 178, 83),
-
-				BACKGROUND = Color3.fromRGB(25, 25, 25),
-				LIGHT_BACKGROUND = Color3.fromRGB(50, 50, 50),
-				BACKGROUND_TRANSPARENCY = .1,
-				BACKGROUND_IMAGE = 16255699706,
-				BACKGROUND_IMAGE_TRANSPARENCY = .2,
-				BACKGROUND_IMAGE_COLOR = Color3.fromRGB(255, 255, 255),
-				DROPSHADOW = Color3.fromRGB(20, 20, 20),
-				DROPSHADOW_TRANSPARENCY = .2,
-
-				REGULAR_TEXT = Color3.fromRGB(235, 235, 235),
-				SHADED_TEXT = Color3.fromRGB(150, 150, 150),
-				THEME_FILL_TEXT = Color3.fromRGB(0, 0, 0),
-
-				OUTLINE = Color3.fromRGB(50, 50, 50),
-				UNDERLINE = Color3.fromRGB(50, 50, 50),
-
-				SUGGESTION_TRANSPAENCY = .2,
-
-				REGULAR_BUTTON_TRANSPARENCY = 1,
-				REGULAR_BUTTON_HOVER_TRANSPARENCY = .9,
-				REGULAR_BUTTON_CLICK_TRANSPARENCY = .5,
-
-				RIPPLE_COLOR = Color3.fromRGB(255, 255, 255),
-				RIPPLE_TRANSPARENCY = .95,
-				RIPPLE_CLICK_TRANSPARENCY = .8,
-
-				HEADER_SHADOW = Color3.fromRGB(25, 25, 25),
-				HEADER_SHADOW_TRANSPARENCY = .7,
-				HEADER_SHAODW_BOTTOM_TRANSPARENCY = .1,
-				HEADER_TRANSPARENCY = .5,
-
-				ACRYLIC = true,
-			}
-		},
-
 		ON_DESTROY = function() end,
 	}, config)
 	winTable.Config = config
 
-	local theme = self.selectTheme(config.THEMES, config.DEFAULT_THEME)
+	local theme = self.selectTheme(self.LibConfig.THEMES, self.LibConfig.DEFAULT_THEME)
 
 	local menuOpened = false
 
@@ -584,14 +593,15 @@ function Library:Window(config)
 
 	local gui = G2L["1"]
 	local main = G2L["2"]
-	local header = main.Header
-	local intro = main.Intro
-	local menu = main.Menu
-	local container = main.Container
-	local background = main.Background
-	local interactive = main.Interactive
+	local header = main:WaitForChild("Header")
+	local intro = main:WaitForChild("Intro")
+	local menu = main:WaitForChild("Menu")
+	local container = main:WaitForChild("Container")
+	local background = main:WaitForChild("Background")
+	local dropShadow = background:WaitForChild("DropShadow")
+	local interactive = main:WaitForChild("Interactive")
 	
-	local dragDetector = main.Drag
+	local dragDetector = main:WaitForChild("Drag")
 
 	local title = header.Prop.Title
 
@@ -1018,7 +1028,9 @@ function Library:Window(config)
 		end
 	end
 	winTable.openMenu = function()
-		if (not menuOpened) then
+		if (not menuOpened)
+			and (not states:CheckState("_minimized"))
+		then
 			task.spawn(function()
 				menuOpened = true
 				menu.Visible = menuOpened
@@ -1119,7 +1131,7 @@ function Library:Window(config)
 		end
 	end
 	winTable.defaultTheme = function()
-		theme = self.selectTheme(config.THEMES, config.DEFAULT_THEME)
+		theme = self.selectTheme(self.LibConfig.THEMES, self.LibConfig.DEFAULT_THEME)
 	end
 	winTable.theme = theme
 	winTable.lib = self
@@ -1136,6 +1148,14 @@ function Library:Window(config)
 			TITLE = "Page",
 			DESCRIPTION = "This is a description",
 			ICON = 0,
+			
+			LAYOUT_TYPE = "list",
+			LAYOUT_PROPERTIES = {
+				["Padding"] = UDim.new(0, 10),
+				["SortOrder"] = Enum.SortOrder.LayoutOrder,
+			},
+			
+			SEARCH_ENABLED = true,
 		}, config)
 
 		G2L["2"] = Instance.new("ScrollingFrame", container);
@@ -1157,7 +1177,8 @@ function Library:Window(config)
 		G2L["3"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
 		G2L["3"]["TextSize"] = 15;
 		G2L["3"]["TextColor3"] = Color3.fromRGB(236, 236, 236);
-		G2L["3"]["Size"] = UDim2.new(1, 0, 0, 20);
+		G2L["3"]["Size"] = UDim2.new(.5, 0, 0, 20);
+		G2L["3"]["TextTruncate"] = Enum.TextTruncate.AtEnd
 		G2L["3"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
 		G2L["3"]["Text"] = [[Title]];
 		G2L["3"]["Name"] = [[Title]];
@@ -1172,7 +1193,7 @@ function Library:Window(config)
 		G2L["4"]["Position"] = UDim2.new(0, 0, 1, 0);
 		G2L["4"]["Name"] = [[Underline]];
 
-		G2L["5"] = Instance.new("ImageLabel", G2L["3"]);
+		G2L["5"] = Instance.new("ImageLabel", G2L["2"]);
 		G2L["5"]["ImageColor3"] = Color3.fromRGB(255, 0, 0);
 		G2L["5"]["AnchorPoint"] = Vector2.new(1, 0.5);
 		G2L["5"]["Image"] = [[rbxassetid://119893371750481]];
@@ -1180,7 +1201,7 @@ function Library:Window(config)
 		G2L["5"]["BorderColor3"] = Color3.fromRGB(28, 43, 54);
 		G2L["5"]["Name"] = [[Icon]];
 		G2L["5"]["BackgroundTransparency"] = 1;
-		G2L["5"]["Position"] = UDim2.new(1, 0, 0.5, 0);
+		G2L["5"]["Position"] = UDim2.new(1, 0, 0, 10);
 
 		G2L["6"] = Instance.new("UIPadding", G2L["2"]);
 		G2L["6"]["PaddingTop"] = UDim.new(0, 15);
@@ -1202,11 +1223,21 @@ function Library:Window(config)
 		G2L["7"]["ScrollBarImageTransparency"] = 0;
 		G2L["7"]["CanvasSize"] = UDim2.new(0,0,0,0);
 		G2L["7"]["AutomaticCanvasSize"] = Enum.AutomaticSize.Y
-
-		G2L["8"] = Instance.new("UIListLayout", G2L["7"]);
-		G2L["8"]["Name"] = [[ListLayout]];
-		G2L["8"]["Padding"] = UDim.new(0, 10);
-		G2L["8"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
+		
+		if type(config.LAYOUT_TYPE) == "string" then
+			local layoutType = config.LAYOUT_TYPE:lower()
+			if layoutType == "list" then
+				local layout = Instance.new("UIListLayout", G2L["7"])
+				layout.Name = [[ListLayout]]
+				
+				self.propertiesApply(layout, config.LAYOUT_PROPERTIES)
+			elseif layoutType == "grid" then
+				local layout = Instance.new("UIGridLayout", G2L["7"])
+				layout.Name = [[GridLayout]]
+				
+				self.propertiesApply(layout, config.LAYOUT_PROPERTIES)
+			end
+		end
 
 		G2L["9"] = Instance.new("UIPadding", G2L["7"]);
 		G2L["9"]["PaddingTop"] = UDim.new(0, 15);
@@ -1214,13 +1245,57 @@ function Library:Window(config)
 		G2L["9"]["PaddingRight"] = UDim.new(0, 10);
 		G2L["9"]["PaddingBottom"] = UDim.new(0, 10);
 		G2L["9"]["PaddingLeft"] = UDim.new(0, 10);
+		
+		G2L["2b"] = Instance.new("TextBox", G2L["2"])
+		G2L["2b"]["PlaceholderColor3"] = Color3.fromRGB(151, 151, 151)
+		G2L["2b"]["ZIndex"] = 3
+		G2L["2b"]["BorderSizePixel"] = 0
+		G2L["2b"]["TextSize"] = 15
+		G2L["2b"]["TextXAlignment"] = Enum.TextXAlignment.Left
+		G2L["2b"]["BackgroundColor3"] = Color3.fromRGB(36, 36, 36)
+		G2L["2b"]["TextColor3"] = Color3.fromRGB(236, 236, 236)
+		G2L["2b"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+		G2L["2b"]["BackgroundTransparency"] = 0.5
+		G2L["2b"]["PlaceholderText"] = [[Search]]
+		G2L["2b"]["Size"] = UDim2.new(.35, 0, 0, 30)
+		G2L["2b"]["Position"] = UDim2.new(1, -35, 0, -5)
+		G2L["2b"]["AnchorPoint"] = Vector2.new(1, 0)
+		G2L["2b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+		G2L["2b"]["Text"] = [[]]
+		G2L["2b"]["Name"] = [[Search]]
+		G2L["2b"]["ClearTextOnFocus"] = false
+		G2L["2b"]["ClipsDescendants"] = true
+
+		G2L["2c"] = Instance.new("UICorner", G2L["2b"])
+		G2L["2c"]["Name"] = [[Corner]]
+		G2L["2c"]["CornerRadius"] = UDim.new(0, 10)
+
+		G2L["2d"] = Instance.new("UIPadding", G2L["2b"])
+		G2L["2d"]["PaddingTop"] = UDim.new(0, 15)
+		G2L["2d"]["Name"] = [[Padding]]
+		G2L["2d"]["PaddingRight"] = UDim.new(0, 15)
+		G2L["2d"]["PaddingBottom"] = UDim.new(0, 15)
+		G2L["2d"]["PaddingLeft"] = UDim.new(0, 15)
+
+		G2L["2g"] = Instance.new("UIStroke", G2L["2b"]);
+		G2L["2g"]["Color"] = Color3.fromRGB(51, 51, 51);
+		G2L["2g"]["Name"] = [[Outline]];
+		G2L["2g"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
+		G2L["2g"]["Transparency"] = 1
 
 		local frame = G2L["2"]
 		local content = frame.Content
 		local title = frame.Title
-		local icon = title.Icon
+		local search = frame.Search
+		local icon = frame.Icon
 
 		smoothScroll(content)
+		searchModule(search, content)
+		
+		if config.SEARCH_ENABLED then
+			search.Visible = true else
+			search.Visible = false
+		end
 
 		local buttonTable = winTable.pageButton({
 			NAME = config.TITLE,
@@ -1256,6 +1331,21 @@ function Library:Window(config)
 			end
 			buttonTable.changeName(name, iconId, desc)
 		end
+		
+		self.addConn("SEARCH_FOCUSED", search.Focused:Connect(function()
+			self.tween(search, TweenInfo.new(.5), {BackgroundTransparency = 0})
+			self.tween(search.Outline, TweenInfo.new(.5), {Transparency = 0})
+			ripple:PopRipple(search, {
+				Color = theme.THEME_COLOR,
+				Speed = .5
+			})
+		end))
+		self.addConn("SEARCH_FOCUSLOST", search.FocusLost:Connect(function()
+			if #search.Text <= 0 then
+				self.tween(search, TweenInfo.new(.5), {BackgroundTransparency = 0.5})
+				self.tween(search.Outline, TweenInfo.new(.5), {Transparency = 1})
+			end
+		end))
 
 		function pageTable:Button(config)
 			local buttonTable = {}
@@ -1425,6 +1515,125 @@ function Library:Window(config)
 			button.Parent = content
 			buttonTable.changeName(config.NAME, config.DESCRIPTION)
 		end
+		
+		function pageTable:GamePalete(config)
+			local gameTable = {}
+			local G2L = {}
+			
+			G2L["2"] = Instance.new("Frame", G2L["1"]);
+			G2L["2"]["BorderSizePixel"] = 0;
+			G2L["2"]["BackgroundColor3"] = Color3.fromRGB(51, 51, 51);
+			G2L["2"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
+			G2L["2"]["Size"] = UDim2.new(0, 250, 0, 175);
+			G2L["2"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
+			G2L["2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+			G2L["2"]["Name"] = [[GameTemplate]];
+
+			G2L["3"] = Instance.new("ImageLabel", G2L["2"]);
+			G2L["3"]["ZIndex"] = 2;
+			G2L["3"]["BorderSizePixel"] = 0;
+			G2L["3"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+			G2L["3"]["Image"] = [["https://www.roblox.com/asset-thumbnail/image?assetId=9872472334&width=768&height=432&format=png"]];
+			G2L["3"]["Size"] = UDim2.new(1, 0, 1, -40);
+			G2L["3"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+			G2L["3"]["BackgroundTransparency"] = 1;
+			G2L["3"]["Name"] = [[Thumbnail]];
+
+			G2L["4"] = Instance.new("UICorner", G2L["3"]);
+			G2L["4"]["Name"] = [[Corner]];
+
+			G2L["5"] = Instance.new("UICorner", G2L["2"]);
+			G2L["5"]["Name"] = [[Corner]];
+
+			G2L["6"] = Instance.new("TextLabel", G2L["2"]);
+			G2L["6"]["BorderSizePixel"] = 0;
+			G2L["6"]["TextSize"] = 14;
+			G2L["6"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+			G2L["6"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+			G2L["6"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.SemiBold, Enum.FontStyle.Normal);
+			G2L["6"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+			G2L["6"]["BackgroundTransparency"] = 1;
+			G2L["6"]["AnchorPoint"] = Vector2.new(0, 1);
+			G2L["6"]["Size"] = UDim2.new(1, 0, 0, 40);
+			G2L["6"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+			G2L["6"]["Text"] = [[1k]];
+			G2L["6"]["Name"] = [[Playing]];
+			G2L["6"]["Position"] = UDim2.new(0, 0, 1, 0);
+
+			G2L["7"] = Instance.new("UIPadding", G2L["6"]);
+			G2L["7"]["Name"] = [[Padding]];
+			G2L["7"]["PaddingLeft"] = UDim.new(0, 35);
+
+			G2L["8"] = Instance.new("ImageLabel", G2L["6"]);
+			G2L["8"]["BorderSizePixel"] = 0;
+			G2L["8"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+			G2L["8"]["AnchorPoint"] = Vector2.new(0, 0.5);
+			G2L["8"]["Image"] = [[rbxassetid://7992557358]];
+			G2L["8"]["Size"] = UDim2.new(0, 20, 0, 20);
+			G2L["8"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+			G2L["8"]["BackgroundTransparency"] = 1;
+			G2L["8"]["Name"] = [[Icon]];
+			G2L["8"]["Position"] = UDim2.new(0, -25, 0.5, 0);
+			
+			G2L["9"] = Instance.new("TextLabel", G2L["2"]);
+			G2L["9"]["ZIndex"] = 2;
+			G2L["9"]["BorderSizePixel"] = 0;
+			G2L["9"]["TextSize"] = 20;
+			G2L["9"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+			G2L["9"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+			G2L["9"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+			G2L["9"]["BackgroundTransparency"] = 1;
+			G2L["9"]["Size"] = UDim2.new(1, 0, 0, 35);
+			G2L["9"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+			G2L["9"]["Text"] = [[Evade]];
+			G2L["9"]["Name"] = [[GameName]];
+			G2L["9"]["TextTruncate"] = Enum.TextTruncate.AtEnd
+			
+			local textStroke = Instance.new("UIStroke", G2L["9"])
+			textStroke.Thickness = 2
+			
+			local palete = G2L["2"]
+			local playerCount = palete.Playing
+			local gameName = palete.GameName
+			local thumbnail = palete.Thumbnail
+
+			local self = winTable.lib
+
+			config = self.validateConfig({
+				GAME_TABLE = {
+					Name = "Game Name",
+					Description = "The game's description",
+					Creator = "Fuzify",
+
+					Thumbnail = "https://www.roblox.com/asset-thumbnail/image?assetId="..game.PlaceId.."&width=768&height=432&format=png",
+
+					Players = 0,
+					MaxPlayers = 0,
+					PlaceId = 1234567890,
+				}
+			}, config)
+			
+			gameTable.changeGamePalete = function(newTable)
+				palete.Name = newTable.Name
+				gameName.Text = newTable.Name
+				playerCount.Text = newTable.Players
+				thumbnail.Image = newTable.Thumbnail
+			end
+			
+			gameTable.changeGamePalete(config.GAME_TABLE)
+			
+			self.onSwitchTheme(function(theme)
+				gameName.TextColor3 = theme.REGULAR_TEXT
+				playerCount.TextColor3 = theme.REGULAR_TEXT
+				playerCount.Icon.ImageColor3 = theme.THEME_COLOR
+				textStroke.Color = theme.THEME_COLOR
+				palete.BackgroundColor3 = theme.LIGHT_BACKGROUND
+			end)
+			
+			palete.Parent = content
+			
+			return gameTable
+		end
 
 		pageTable.changeName(config.TITLE, config.ICON)
 
@@ -1434,8 +1643,13 @@ function Library:Window(config)
 		self.onSwitchTheme(function(theme)
 			title.TextColor3 = theme.REGULAR_TEXT
 			title.Underline.BackgroundColor3 = theme.THEME_COLOR
-			title.Icon.ImageColor3 = theme.THEME_COLOR
+			icon.ImageColor3 = theme.THEME_COLOR
 			content.ScrollBarImageColor3 = theme.THEME_COLOR
+			
+			search.BackgroundColor3 = theme.LIGHT_BACKGROUND
+			search.TextColor3 = theme.REGULAR_TEXT
+			search.PlaceholderColor3 = theme.SHADED_TEXT
+			search.Outline.Color = theme.THEME_COLOR
 		end)
 
 		return pageTable
@@ -1474,6 +1688,8 @@ function Library:Window(config)
 			if blur then
 				blur:Destroy()
 			end
+			
+			winTable.closeMenu()
 
 			self.tween(intro.Background.Grid, TweenInfo.new(.25), {CellSize = UDim2.new(
 				.2,
@@ -1572,8 +1788,8 @@ function Library:Window(config)
 
 	self.onSwitchTheme(function(theme)
 		background.BackgroundColor3 = theme.BACKGROUND
-		background.DropShadow.ImageColor3 = theme.DROPSHADOW
-		background.DropShadow.ImageTransparency = theme.DROPSHADOW_TRANSPARENCY
+		dropShadow.ImageColor3 = theme.DROPSHADOW
+		dropShadow.ImageTransparency = theme.DROPSHADOW_TRANSPARENCY
 		background.Image.Image = `rbxassetid://{theme.BACKGROUND_IMAGE}`
 		background.Image.ImageTransparency = theme.BACKGROUND_IMAGE_TRANSPARENCY
 		background.Image.ImageColor3 = theme.BACKGROUND_IMAGE_COLOR
