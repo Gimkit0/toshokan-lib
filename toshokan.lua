@@ -1556,9 +1556,10 @@ function Library:Window(config)
 			G2L["6"]["AnchorPoint"] = Vector2.new(0, 1);
 			G2L["6"]["Size"] = UDim2.new(1, 0, 0, 40);
 			G2L["6"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-			G2L["6"]["Text"] = [[1k]];
-			G2L["6"]["Name"] = [[Playing]];
+			G2L["6"]["Text"] = [[Fuzify]];
+			G2L["6"]["Name"] = [[GameCreator]];
 			G2L["6"]["Position"] = UDim2.new(0, 0, 1, 0);
+			G2L["6"]["TextTruncate"] = Enum.TextTruncate.AtEnd
 
 			G2L["7"] = Instance.new("UIPadding", G2L["6"]);
 			G2L["7"]["Name"] = [[Padding]];
@@ -1593,7 +1594,7 @@ function Library:Window(config)
 			textStroke.Thickness = 2
 			
 			local palete = G2L["2"]
-			local playerCount = palete.Playing
+			local gameCreator = palete.GameCreator
 			local gameName = palete.GameName
 			local thumbnail = palete.Thumbnail
 
@@ -1616,7 +1617,7 @@ function Library:Window(config)
 			gameTable.changeGamePalete = function(newTable)
 				palete.Name = newTable.Name
 				gameName.Text = newTable.Name
-				playerCount.Text = newTable.Players
+				gameCreator.Text = newTable.Creator.Name
 				thumbnail.Image = newTable.Thumbnail
 			end
 			
@@ -1624,9 +1625,9 @@ function Library:Window(config)
 			
 			self.onSwitchTheme(function(theme)
 				gameName.TextColor3 = theme.REGULAR_TEXT
-				playerCount.TextColor3 = theme.REGULAR_TEXT
-				playerCount.Icon.ImageColor3 = theme.THEME_COLOR
-				textStroke.Color = theme.THEME_COLOR
+				gameCreator.TextColor3 = theme.REGULAR_TEXT
+				gameCreator.Icon.ImageColor3 = theme.THEME_COLOR
+				textStroke.Color = theme.BACKGROUND
 				palete.BackgroundColor3 = theme.LIGHT_BACKGROUND
 			end)
 			
