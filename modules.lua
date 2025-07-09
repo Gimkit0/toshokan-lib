@@ -477,7 +477,7 @@ function Modules.SmoothScroll()
 		end)
 
 		local SizeConnection = ScrollFrame:GetPropertyChangedSignal("AbsoluteCanvasSize"):Connect(function()
-			local Layout = ScrollFrame:FindFirstChildOfClass("UIListLayout")
+			local Layout = ScrollFrame:FindFirstChildOfClass("UIListLayout") or ScrollFrame:FindFirstChildOfClass("UIGridLayout")
 			if ScrollFrame.AutomaticCanvasSize ~= Enum.AutomaticSize.None then
 				if not Layout then
 					local AbsoluteSize = ScrollFrame.AbsoluteCanvasSize
