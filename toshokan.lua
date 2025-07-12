@@ -1456,7 +1456,7 @@ function Library:Window(config)
 
 			local descButton = winTable.circleButton({
 				NAME = "Description Activate",
-				ICON = 12809025337,
+				ICON = 2717396089,
 
 				SIZE = UDim2.new(0, 15, 0, 15),
 
