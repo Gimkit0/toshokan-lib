@@ -1046,6 +1046,11 @@ function Library:Window(config)
 
 				self.tween(menu.Top.Search, TweenInfo.new(.5), {BackgroundTransparency = .5})
 				self.tween(menu.Top.Search, TweenInfo.new(.5), {TextTransparency = 0})
+				
+				if #menu.Top.Search.Text > 0 then
+					self.tween(menu.Top.Search.Outline, TweenInfo.new(.5), {Transparency = 0})
+				end
+				
 				task.wait(.2)
 				for _, button in ipairs(menu.Buttons:GetChildren()) do
 					if button:IsA("ImageButton") then
@@ -1083,6 +1088,7 @@ function Library:Window(config)
 
 			self.tween(menu.Top.Search, TweenInfo.new(.5), {BackgroundTransparency = 1})
 			self.tween(menu.Top.Search, TweenInfo.new(.5), {TextTransparency = 1})
+			self.tween(menu.Top.Search.Outline, TweenInfo.new(.5), {Transparency = 1})
 			task.spawn(function()
 				for _, button in ipairs(menu.Buttons:GetChildren()) do
 					if button:IsA("ImageButton") then
@@ -1219,7 +1225,7 @@ function Library:Window(config)
 		G2L["7"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
 		G2L["7"]["Position"] = UDim2.new(0, 0, 1, 0);
 		G2L["7"]["Name"] = [[Content]];
-		G2L["7"]["ScrollBarThickness"] = 2;
+		G2L["7"]["ScrollBarThickness"] = 5;
 		G2L["7"]["ScrollBarImageTransparency"] = 0;
 		G2L["7"]["CanvasSize"] = UDim2.new(0,0,0,0);
 		G2L["7"]["AutomaticCanvasSize"] = Enum.AutomaticSize.Y
