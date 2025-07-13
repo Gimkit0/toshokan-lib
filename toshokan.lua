@@ -18,7 +18,6 @@ function Library.new()
 		GuiService = game:GetService("GuiService"),
 	}
 	self.Modules = {
-		Blur = modules.Blur(),
 		Fade = modules.Fade(),
 		Resuponshibu = modules.Resuponshibu(),
 		States = modules.States(),
@@ -71,8 +70,6 @@ function Library.new()
 				HEADER_SHADOW_TRANSPARENCY = .7,
 				HEADER_SHAODW_BOTTOM_TRANSPARENCY = .1,
 				HEADER_TRANSPARENCY = .5,
-
-				ACRYLIC = true,
 			}
 		},
 	}
@@ -140,7 +137,9 @@ function Library.new()
 			table.insert(self.Storage.ThemeConns, conn)
 		end
 		if self.Storage.CurrentTheme then
-			conn(self.Storage.CurrentTheme)
+			self.spawn(function()
+				conn(self.Storage.CurrentTheme)
+			end)
 		end
 	end
 	self.switchConfig = function(config)
@@ -167,7 +166,7 @@ function Library:Window(config)
 	}, config)
 	winTable.Config = config
 
-	local theme = self.selectTheme(self.LibConfig.THEMES, self.LibConfig.DEFAULT_THEME)
+	local theme = self.Storage.CurrentTheme
 
 	local menuOpened = false
 
@@ -1004,15 +1003,6 @@ function Library:Window(config)
 			header.Prop.MainButtons.Minimize.Icon.Image = `rbxassetid://{17601421663}`
 		end
 	end
-	winTable.setAcrylic = function(bool : boolean?)
-		if blur then
-			blur:Destroy()
-			blur = nil
-		end
-		if bool then
-			blur = self.Modules.Blur.new(main, "Rectangle")
-		end
-	end
 	winTable.toggleMinimize = function()
 		if states:CheckState("_minimized") then
 			winTable.setWindowState("normal")
@@ -1818,8 +1808,6 @@ function Library:Window(config)
 		interactive.HoverShadow.ImageColor3 = theme.HEADER_SHADOW
 
 		title.TextColor3 = theme.SHADED_TEXT
-
-		winTable.setAcrylic(theme.ACRYLIC)
 	end)
 
 	return winTable
